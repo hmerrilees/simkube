@@ -19,6 +19,7 @@ paths:
                 - end_ts
                 - export_path
                 - filters
+                - export_format
               properties:
                 start_ts:
                   type: integer
@@ -48,6 +49,11 @@ paths:
                         $ref: 'https://raw.githubusercontent.com/kubernetes/kubernetes/master/api/openapi-spec/v3/api__v1_openapi.json#/components/schemas/io.k8s.apimachinery.pkg.apis.meta.v1.LabelSelector'  # yamllint disable-line rule:line-length
                     exclude_daemonsets:
                       type: boolean
+                export_format:
+                  type: string
+                  enum:
+                    - msgpack
+                    - json
       responses:
         '200':
           description: OK

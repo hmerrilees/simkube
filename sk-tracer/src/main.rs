@@ -47,7 +47,7 @@ async fn export_helper(
     trace_store: &Arc<Mutex<TraceStore>>,
     object_store: &(dyn ObjectStoreWrapper + Sync),
 ) -> anyhow::Result<Vec<u8>> {
-    let trace_data = trace_store.lock().unwrap().export(req.start_ts, req.end_ts, &req.filters)?;
+    let trace_data = trace_store.lock().unwrap().export(req.start_ts, req.end_ts, &req.filters, req.export_format)?;
 
     match object_store.scheme() {
         // If we're writing to a cloud provider, we want to write from the location that the

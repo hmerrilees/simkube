@@ -2,6 +2,7 @@ use anyhow::bail;
 use sk_api::v1::{
     ExportFilters,
     ExportRequest,
+    ExportFormat,
 };
 use sk_core::external_storage::{
     ObjectStoreWrapper,
@@ -9,6 +10,21 @@ use sk_core::external_storage::{
 };
 use sk_core::prelude::*;
 use sk_core::time::duration_to_ts;
+
+#[derive(clap::ValueEnum, Clone)]
+pub enum ExportFormatArg {
+    Json,
+    Msgpack,
+}
+
+impl From<ExportFormatArg> for ExportFormat {
+    fn from(value: ExportFormatArg) -> Self {
+        match value {
+            ExportFormatArg::Json => ExportFormat::Json,
+            ExportFormatArg::Msgpack => ExportFormat::Msgpack,
+        }
+    }
+}
 
 #[derive(clap::Args)]
 pub struct Args {
@@ -56,11 +72,14 @@ pub struct Args {
         default_value = "file:///tmp/kind-node-data"
     )]
     pub output_path: String,
+
+    #[arg(short, long, long_help = "format in which to export trace data", default_value = "json")]
+    pub format: ExportFormatArg,
 }
 
 pub async fn cmd(args: &Args) -> EmptyResult {
     let filters = ExportFilters::new(args.excluded_namespaces.clone(), vec![], true);
-    let req = ExportRequest::new(args.start_time, args.end_time, args.output_path.clone(), filters);
+    let req = ExportRequest::new(args.start_time, args.end_time, args.output_path.clone(), filters, args.format.clone().into());
     let endpoint = format!("{}/export", args.tracer_address);
 
     println!("exporting trace data");

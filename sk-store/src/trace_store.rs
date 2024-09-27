@@ -11,7 +11,7 @@ use clockabilly::{
 };
 use kube::api::DynamicObject;
 use kube::ResourceExt;
-use sk_api::v1::ExportFilters;
+use sk_api::v1::{ExportFilters, ExportFormat};
 use sk_core::jsonutils;
 use sk_core::k8s::{
     build_deletable,
@@ -56,7 +56,7 @@ impl TraceStore {
         TraceStore { config, ..Default::default() }
     }
 
-    pub fn export(&self, start_ts: i64, end_ts: i64, filter: &ExportFilters) -> anyhow::Result<Vec<u8>> {
+    pub fn export(&self, start_ts: i64, end_ts: i64, filter: &ExportFilters, format: ExportFormat) -> anyhow::Result<Vec<u8>> {
         info!("Exporting objs between {start_ts} and {end_ts} with filters: {filter:?}");
 
         // First, we collect all the events in our trace that match our configured filters.  This
@@ -68,9 +68,14 @@ impl TraceStore {
         // Collect all pod lifecycle data that is a) between the start and end times, and b) is
         // owned by some object contained in the trace
         let lifecycle_data = self.pod_owners.filter(start_ts, end_ts, &index);
-        let data = rmp_serde::to_vec_named(&(&self.config, &events, &index, &lifecycle_data))?;
 
-        info!("Exported {} events", events.len());
+        let export_val = &(&self.config, &events, &index, &lifecycle_data);
+        let data = match format {
+            ExportFormat::Msgpack => rmp_serde::to_vec_named(export_val)?,
+            ExportFormat::Json => serde_json::to_vec_pretty(export_val)?,
+        };
+
+        info!("Exported {} events via {:?}", events.len(), format);
         Ok(data)
     }
 

@@ -21,6 +21,8 @@ use sk_store::{
     TracerConfig,
 };
 
+use super::export::ExportFormatArg;
+
 #[derive(clap::Args)]
 pub struct Args {
     #[arg(short, long, long_help = "config file specifying resources to snapshot")]
@@ -41,6 +43,12 @@ pub struct Args {
         default_value = "trace.out"
     )]
     pub output: String,
+
+    #[arg(
+        long,
+        long_help = "format to export trace data in",
+    )]
+    pub export_format: ExportFormatArg,
 }
 
 pub async fn cmd(args: &Args) -> EmptyResult {
@@ -76,7 +84,7 @@ pub async fn cmd(args: &Args) -> EmptyResult {
     let filters = ExportFilters::new(args.excluded_namespaces.clone(), vec![], true);
     let start_ts = UtcClock.now_ts();
     let end_ts = start_ts + 1;
-    let data = store.lock().unwrap().export(start_ts, end_ts, &filters)?;
+    let data = store.lock().unwrap().export(start_ts, end_ts, &filters, args.export_format.clone().into())?;
 
     println!("Writing trace file: {}", args.output);
     let mut file = File::create(&args.output)?;
