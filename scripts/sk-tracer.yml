@@ -1,0 +1,22 @@
+trackedObjects:
+  apps/v1.Deployment:
+    podSpecTemplatePath: /spec/template
+  batch/v1.Job:
+    podSpecTemplatePath: /spec/template
+  apps/v1.StatefulSet:
+    podSpecTemplatePath: /spec/template
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: sk-tracer
+rules:
+- apiGroups: [""]
+  resources: ["pods"]
+  verbs: ["get", "watch", "list"]
+- apiGroups: ["apps/v1"]
+  resources: ["deployment", "statefulset"]
+  verbs: ["get", "watch", "list"]
+- apiGroups: ["batch/v1"]
+  resources: ["job"]
+  verbs: ["get", "watch", "list"]
+
